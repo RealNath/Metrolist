@@ -55,6 +55,7 @@ import androidx.compose.ui.zIndex
 import android.app.Activity
 import android.content.res.Configuration
 import android.view.WindowManager
+import androidx.navigation.NavController // استيراد NavController
 import androidx.palette.graphics.Palette
 import coil3.compose.AsyncImage
 import coil3.imageLoader
@@ -83,6 +84,7 @@ import kotlinx.coroutines.withContext
 fun LyricsScreen(
     mediaMetadata: MediaMetadata,
     onBackClick: () -> Unit,
+    navController: NavController,
     modifier: Modifier = Modifier,
     backgroundAlpha: Float = 1f
 ) {
@@ -329,8 +331,6 @@ fun LyricsScreen(
                     Alignment.TopCenter
                 }
             ) {
-                // The Lyrics component needs a `sliderPositionProvider`, but since we removed the slider,
-                // we can provide a lambda that always returns null.
                 Lyrics(sliderPositionProvider = { null })
             }
 
