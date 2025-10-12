@@ -130,6 +130,7 @@ import com.metrolist.music.lyrics.LyricsUtils.romanizeJapanese
 import com.metrolist.music.lyrics.LyricsUtils.romanizeKorean
 import com.metrolist.music.ui.component.shimmer.ShimmerHost
 import com.metrolist.music.ui.component.shimmer.TextPlaceholder
+import com.metrolist.music.ui.menu.LyricsMenu
 import com.metrolist.music.ui.screens.settings.DarkMode
 import com.metrolist.music.ui.screens.settings.LyricsPosition
 import com.metrolist.music.ui.utils.fadingEdge
@@ -150,6 +151,7 @@ import kotlin.time.Duration.Companion.seconds
 fun Lyrics(
     sliderPositionProvider: () -> Long?,
     modifier: Modifier = Modifier,
+    onExpandLyrics: () -> Unit = {},
 ) {
     val playerConnection = LocalPlayerConnection.current ?: return
     val menuState = LocalMenuState.current
@@ -869,7 +871,72 @@ fun Lyrics(
                 }
             }
         }
-        // Removed the more button from bottom - it's now in the top header
+
+        // Menu and Fullscreen buttons in top-right corner
+        mediaMetadata?.let { metadata ->
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(
+                        top = WindowInsets.systemBars
+                            .only(WindowInsetsSides.Top)
+                            .asPaddingValues()
+                            .calculateTopPadding() + 12.dp,
+                        end = 16.dp
+                    )
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Fullscreen button
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                color = Color.Black.copy(alpha = 0.3f),
+                                shape = CircleShape
+                            )
+                            .clickable {
+                                onExpandLyrics()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.fullscreen),
+                            contentDescription = stringResource(R.string.lyrics),
+                            tint = textColor
+                        )
+                    }
+
+                    // Menu button
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                color = Color.Black.copy(alpha = 0.3f),
+                                shape = CircleShape
+                            )
+                            .clickable {
+                                menuState.show {
+                                    LyricsMenu(
+                                        lyricsProvider = { lyricsEntity },
+                                        mediaMetadataProvider = { metadata },
+                                        onDismiss = menuState::dismiss
+                                    )
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.more_horiz),
+                            contentDescription = stringResource(R.string.more_options),
+                            tint = textColor
+                        )
+                    }
+                }
+            }
+        }
     }
 
     if (showProgressDialog) {

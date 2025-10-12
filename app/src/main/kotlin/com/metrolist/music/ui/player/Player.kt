@@ -1006,7 +1006,8 @@ fun BottomSheetPlayer(
                         Thumbnail(
                             sliderPositionProvider = { sliderPosition },
                             modifier = Modifier.size(thumbnailSize),
-                            isPlayerExpanded = state.isExpanded
+                            isPlayerExpanded = state.isExpanded,
+                            onExpandLyrics = { lyricsSheetState.expandSoft() }
                         )
                     }
                     Column(
@@ -1042,7 +1043,8 @@ fun BottomSheetPlayer(
                         Thumbnail(
                             sliderPositionProvider = { sliderPosition },
                             modifier = Modifier.nestedScroll(state.preUpPostDownNestedScrollConnection),
-                            isPlayerExpanded = state.isExpanded
+                            isPlayerExpanded = state.isExpanded,
+                            onExpandLyrics = { lyricsSheetState.expandSoft() }
                         )
                     }
 
@@ -1072,7 +1074,6 @@ fun BottomSheetPlayer(
             onShowLyrics = {
                 onShowLyricsChange(!showLyrics)
             },
-            onExpandLyrics = { lyricsSheetState.expandSoft() },
             pureBlack = pureBlack,
         )
 

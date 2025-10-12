@@ -88,6 +88,7 @@ fun Thumbnail(
     sliderPositionProvider: () -> Long?,
     modifier: Modifier = Modifier,
     isPlayerExpanded: Boolean = true, // Add parameter to control swipe based on player state
+    onExpandLyrics: () -> Unit = {},
 ) {
     val playerConnection = LocalPlayerConnection.current ?: return
     val context = LocalContext.current
@@ -220,7 +221,10 @@ fun Thumbnail(
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            Lyrics(sliderPositionProvider = sliderPositionProvider)
+            Lyrics(
+                sliderPositionProvider = sliderPositionProvider,
+                onExpandLyrics = onExpandLyrics
+            )
         }
         // Error view
         AnimatedVisibility(
