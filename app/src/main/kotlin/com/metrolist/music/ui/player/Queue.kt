@@ -146,6 +146,7 @@ fun Queue(
     textButtonColor: Color,
     iconButtonColor: Color,
     onShowLyrics: () -> Unit = {},
+    onExpandLyrics: () -> Unit = {},
     pureBlack: Boolean,
 ) {
     val context = LocalContext.current
@@ -365,6 +366,26 @@ fun Queue(
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
+
+                    Box(
+                        modifier = Modifier
+                            .size(buttonSize)
+                            .clip(CircleShape)
+                            .background(textButtonColor)
+                            .clickable {
+                                onExpandLyrics()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.lyrics),
+                            contentDescription = stringResource(R.string.lyrics),
+                            modifier = Modifier.size(iconSize),
+                            tint = iconButtonColor
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Box(
                         modifier = Modifier

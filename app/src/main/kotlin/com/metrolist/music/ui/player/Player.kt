@@ -101,6 +101,7 @@ import coil3.imageLoader
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.toBitmap
+import com.metrolist.music.LocalDatabase
 import com.metrolist.music.LocalDownloadUtil
 import com.metrolist.music.LocalPlayerConnection
 import com.metrolist.music.R
@@ -114,6 +115,7 @@ import com.metrolist.music.ui.theme.PlayerColorExtractor
 import com.metrolist.music.ui.theme.PlayerSliderColors
 import com.metrolist.music.constants.PlayerHorizontalPadding
 import com.metrolist.music.constants.QueuePeekHeight
+import com.metrolist.music.constants.ShowLyricsKey
 import com.metrolist.music.constants.SliderStyle
 import com.metrolist.music.constants.SliderStyleKey
 import com.metrolist.music.extensions.togglePlayPause
@@ -156,6 +158,10 @@ fun BottomSheetPlayer(
     val (useNewPlayerDesign, onUseNewPlayerDesignChange) = rememberPreference(
         UseNewPlayerDesignKey,
         defaultValue = true
+    )
+    val (showLyrics, onShowLyricsChange) = rememberPreference(
+        ShowLyricsKey,
+        defaultValue = false
     )
     val playerBackground by rememberEnumPreference(
         key = PlayerBackgroundStyleKey,
@@ -1063,7 +1069,10 @@ fun BottomSheetPlayer(
             TextBackgroundColor = TextBackgroundColor,
             textButtonColor = textButtonColor,
             iconButtonColor = iconButtonColor,
-            onShowLyrics = { lyricsSheetState.expandSoft() },
+            onShowLyrics = {
+                onShowLyricsChange(!showLyrics)
+            },
+            onExpandLyrics = { lyricsSheetState.expandSoft() },
             pureBlack = pureBlack,
         )
 
