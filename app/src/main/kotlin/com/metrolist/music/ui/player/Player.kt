@@ -305,6 +305,7 @@ fun BottomSheetPlayer(
                     } else {
                         playerConnection.service.sleepTimer.triggerTime - System.currentTimeMillis()
                     }
+                delay(1000L)
             }
         }
     }
@@ -379,13 +380,14 @@ fun BottomSheetPlayer(
         mutableStateOf(false)
     }
 
-    LaunchedEffect(playbackState) {
-        if (playbackState == STATE_READY) {
-            while (isActive) {
-                position = playerConnection.player.currentPosition
-                duration = playerConnection.player.duration
-            }
+    LaunchedEffect(isPlaying, playbackState) {
+        while (isActive && isPlaying && playbackState == Player.STATE_READY) {
+            position = audioPlayer.currentPosition
+            duration = audioPlayer.duration
+            delay(200)
         }
+        position = audioPlayer.currentPosition
+        duration = audioPlayer.duration
     }
 
     val dismissedBound = QueuePeekHeight + WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
