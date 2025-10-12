@@ -305,7 +305,6 @@ fun BottomSheetPlayer(
                     } else {
                         playerConnection.service.sleepTimer.triggerTime - System.currentTimeMillis()
                     }
-                delay(1000L)
             }
         }
     }
@@ -383,7 +382,6 @@ fun BottomSheetPlayer(
     LaunchedEffect(playbackState) {
         if (playbackState == STATE_READY) {
             while (isActive) {
-                delay(500)
                 position = playerConnection.player.currentPosition
                 duration = playerConnection.player.duration
             }
