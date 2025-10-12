@@ -142,7 +142,6 @@ import com.metrolist.music.constants.DynamicThemeKey
 import com.metrolist.music.constants.MiniPlayerHeight
 import com.metrolist.music.constants.MiniPlayerBottomSpacing
 import com.metrolist.music.constants.UpdateNotificationsEnabledKey
-import com.metrolist.music.constants.UseNewMiniPlayerDesignKey
 import com.metrolist.music.constants.NavigationBarAnimationSpec
 import com.metrolist.music.constants.NavigationBarHeight
 import com.metrolist.music.constants.PauseSearchHistoryKey
@@ -443,7 +442,6 @@ class MainActivity : ComponentActivity() {
 
                     val navigationItems = remember { Screens.MainScreens }
                     val (slimNav) = rememberPreference(SlimNavBarKey, defaultValue = false)
-                    val (useNewMiniPlayerDesign) = rememberPreference(UseNewMiniPlayerDesignKey, defaultValue = true)
                     val defaultOpenTab = remember {
                         dataStore[DefaultOpenTabKey].toEnum(defaultValue = NavigationTab.HOME)
                     }
@@ -550,7 +548,6 @@ class MainActivity : ComponentActivity() {
                             dismissedBound = 0.dp,
                             collapsedBound = bottomInset +
                                 (if (!showRail && shouldShowNavigationBar) getNavPadding() else 0.dp) +
-                                (if (useNewMiniPlayerDesign) MiniPlayerBottomSpacing else 0.dp) +
                                 MiniPlayerHeight,
                             expandedBound = maxHeight,
                         )
