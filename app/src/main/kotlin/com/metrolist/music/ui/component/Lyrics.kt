@@ -873,9 +873,10 @@ fun Lyrics(
             }
         }
 
-        // Menu and Fullscreen buttons in top-right corner
-        mediaMetadata?.let { metadata ->
-            Box(
+        // Menu and Fullscreen buttons in top-right corner (only show in inline mode)
+        if (showControls) {
+            mediaMetadata?.let { metadata ->
+                Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(
