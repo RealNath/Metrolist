@@ -152,6 +152,7 @@ fun Lyrics(
     sliderPositionProvider: () -> Long?,
     modifier: Modifier = Modifier,
     onExpandLyrics: () -> Unit = {},
+    showControls: Boolean = true, // Show menu and fullscreen buttons
 ) {
     val playerConnection = LocalPlayerConnection.current ?: return
     val menuState = LocalMenuState.current
@@ -936,6 +937,7 @@ fun Lyrics(
                         )
                     }
                 }
+            }
             }
         }
     }

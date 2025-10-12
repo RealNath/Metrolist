@@ -331,7 +331,10 @@ fun LyricsScreen(
                     Alignment.TopCenter
                 }
             ) {
-                Lyrics(sliderPositionProvider = { null })
+                Lyrics(
+                    sliderPositionProvider = { null },
+                    showControls = false  // Hide controls in fullscreen mode
+                )
             }
 
             // Add some space at the bottom so lyrics don't stick to the edge.
