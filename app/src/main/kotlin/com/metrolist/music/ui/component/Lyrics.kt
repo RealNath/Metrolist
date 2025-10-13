@@ -785,6 +785,7 @@ fun Lyrics(
                     Box(
                         modifier = Modifier
                             .size(40.dp)
+                            .clip(CircleShape)
                             .background(
                                 color = Color.Black.copy(alpha = 0.3f),
                                 shape = CircleShape
@@ -804,6 +805,7 @@ fun Lyrics(
                     Box(
                         modifier = Modifier
                             .size(40.dp)
+                            .clip(CircleShape)
                             .background(
                                 color = Color.Black.copy(alpha = 0.3f),
                                 shape = CircleShape
