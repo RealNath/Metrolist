@@ -765,6 +765,8 @@ fun Lyrics(
         }
 
         if (showControls && mediaMetadata != null) {
+            val currentMetadata = mediaMetadata
+
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -811,7 +813,7 @@ fun Lyrics(
                                     LyricsMenu(
                                         lyricsProvider = { lyricsEntity },
                                         songProvider = { currentSong?.song },
-                                        mediaMetadataProvider = { metadata },
+                                        mediaMetadataProvider = { currentMetadata },
                                         onDismiss = menuState::dismiss
                                     )
                                 }
