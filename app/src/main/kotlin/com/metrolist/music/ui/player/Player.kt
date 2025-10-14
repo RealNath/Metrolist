@@ -196,11 +196,14 @@ fun BottomSheetPlayer(
     val canSkipNext by playerConnection.canSkipNext.collectAsState()
     val sliderStyle by rememberEnumPreference(SliderStyleKey, SliderStyle.DEFAULT)
 
-    var position by rememberSaveable(playbackState) {
-        mutableLongStateOf(playerConnection.player.currentPosition)
+    // Use derivedStateOf to read position only when needed (no continuous updates)
+    val position by remember {
+        derivedStateOf { 
+            if (isPlaying) playerConnection.player.currentPosition else playerConnection.player.currentPosition
+        }
     }
-    var duration by rememberSaveable(playbackState) {
-        mutableLongStateOf(playerConnection.player.duration)
+    val duration by remember {
+        derivedStateOf { playerConnection.player.duration }
     }
     var sliderPosition by remember {
         mutableStateOf<Long?>(null)
@@ -380,15 +383,7 @@ fun BottomSheetPlayer(
         mutableStateOf(false)
     }
 
-    LaunchedEffect(playbackState) {
-        if (playbackState == STATE_READY) {
-            while (isActive) {
-                delay(2000)
-                position = playerConnection.player.currentPosition
-                duration = playerConnection.player.duration
-            }
-        }
-    }
+    // Removed while loop - derivedStateOf eliminates need for continuous updates
 
     val dismissedBound = QueuePeekHeight + WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
 
