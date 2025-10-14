@@ -230,7 +230,7 @@ fun BottomSheetPlayer(
                     val request = ImageRequest.Builder(context)
                         .data(currentMetadata.thumbnailUrl)
                         .size(100, 100)
-                        .allowHardware(false)
+                        .allowHardware(true)
                         .memoryCacheKey("gradient_${currentMetadata.id}")
                         .build()
 
