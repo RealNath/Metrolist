@@ -307,17 +307,20 @@ class MusicService :
         connectivityObserver = NetworkConnectivityObserver(this)
 
         scope.launch {
-            connectivityObserver.networkStatus.collect { isConnected ->
-                isNetworkConnected.value = isConnected
-                if (isConnected && waitingForNetworkConnection.value) {
-                    // Simple auto-play logic like OuterTune
-                    waitingForNetworkConnection.value = false
-                    if (player.currentMediaItem != null && player.playWhenReady) {
-                        player.prepare()
-                        player.play()
+            connectivityObserver.networkStatus
+                .debounce(500)
+                .distinctUntilChanged()
+                .collect { isConnected ->
+                    isNetworkConnected.value = isConnected
+                    if (isConnected && waitingForNetworkConnection.value) {
+                        // Simple auto-play logic like OuterTune
+                        waitingForNetworkConnection.value = false
+                        if (player.currentMediaItem != null && player.playWhenReady) {
+                            player.prepare()
+                            player.play()
+                        }
                     }
                 }
-            }
         }
 
         playerVolume.collectLatest(scope) {
@@ -339,26 +342,8 @@ class MusicService :
             }
         }
 
-        combine(
-            currentMediaMetadata.distinctUntilChangedBy { it?.id },
-            dataStore.data.map { it[ShowLyricsKey] ?: false }.distinctUntilChanged(),
-        ) { mediaMetadata, showLyrics ->
-            mediaMetadata to showLyrics
-        }.collectLatest(scope) { (mediaMetadata, showLyrics) ->
-            if (showLyrics && mediaMetadata != null && database.lyrics(mediaMetadata.id)
-                    .first() == null
-            ) {
-                val lyrics = lyricsHelper.getLyrics(mediaMetadata)
-                database.query {
-                    upsert(
-                        LyricsEntity(
-                            id = mediaMetadata.id,
-                            lyrics = lyrics,
-                        ),
-                    )
-                }
-            }
-        }
+        // Lyrics auto-load disabled to reduce network and database overhead
+        // Lyrics will be loaded on-demand when lyrics screen is opened
 
         dataStore.data
             .map { it[SkipSilenceKey] ?: false }
