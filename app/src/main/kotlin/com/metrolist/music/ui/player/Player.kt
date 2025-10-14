@@ -383,7 +383,15 @@ fun BottomSheetPlayer(
         mutableStateOf(false)
     }
 
-    // Removed while loop - derivedStateOf eliminates need for continuous updates
+    LaunchedEffect(playbackState) {
+        if (playbackState == STATE_READY) {
+            while (isActive) {
+                delay(500)
+                position = playerConnection.player.currentPosition
+                duration = playerConnection.player.duration
+            }
+        }
+    }
 
     val dismissedBound = QueuePeekHeight + WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
 
