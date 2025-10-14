@@ -1127,11 +1127,9 @@ class MusicService :
     override fun onPlaybackStateChanged(
         @Player.State playbackState: Int,
     ) {
-        // Save state when playback state changes (debounced)
-        if (dataStore.get(PersistentQueueKey, true)) {
-            saveQueueToDiskDebounced()
-        }
-
+        // Skip queue save on state changes to reduce I/O overhead
+        // Queue is saved on media transitions and destroy only
+        
         if (playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED) {
             scrobbleManager?.onSongStop()
         }
@@ -1223,10 +1221,7 @@ class MusicService :
             }
         }
 
-        // Save state when repeat mode changes (debounced)
-        if (dataStore.get(PersistentQueueKey, true)) {
-            saveQueueToDiskDebounced()
-        }
+        // Skip save on repeat mode change - will be saved on next media transition
     }
 
     override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
@@ -1448,14 +1443,22 @@ class MusicService :
 
     private fun saveQueueToDiskDebounced() {
         saveQueueJob?.cancel()
-        saveQueueJob = scope.launch {
-            delay(2000) // Debounce 2 seconds to avoid excessive I/O
+        saveQueueJob = scope.launch(Dispatchers.IO) { // Use IO dispatcher to prevent blocking main thread
+            delay(5000) // 5 seconds debounce for heavy Java serialization
             saveQueueToDisk()
         }
     }
     
     private fun saveQueueToDisk() {
         if (player.mediaItemCount == 0) {
+            return
+        }
+        
+        // Ensure we're on IO thread for heavy serialization
+        if (Thread.currentThread().name.contains("main", ignoreCase = true)) {
+            scope.launch(Dispatchers.IO) {
+                saveQueueToDisk()
+            }
             return
         }
 

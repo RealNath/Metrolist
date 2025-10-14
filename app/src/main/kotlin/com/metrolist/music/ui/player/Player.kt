@@ -428,19 +428,20 @@ fun BottomSheetPlayer(
                 when (playerBackground) {
                     PlayerBackgroundStyle.BLUR -> {
                         AnimatedContent(
-                            targetState = mediaMetadata?.thumbnailUrl,
+                            targetState = mediaMetadata?.id,
                             transitionSpec = {
-                                fadeIn(tween(800)).togetherWith(fadeOut(tween(800)))
+                                fadeIn(tween(300)).togetherWith(fadeOut(tween(300)))
                             },
                             label = "blurBackground"
-                        ) { thumbnailUrl ->
+                        ) { _ ->
+                            val thumbnailUrl = mediaMetadata?.thumbnailUrl
                             if (thumbnailUrl != null) {
                                 Box(modifier = Modifier.alpha(backgroundAlpha)) {
                                     AsyncImage(
                                         model = ImageRequest.Builder(context)
                                             .data(thumbnailUrl)
                                             .size(100, 100)
-                                            .allowHardware(false)
+                                            .allowHardware(true)
                                             .build(),
                                         contentDescription = null,
                                         contentScale = ContentScale.Crop,
