@@ -394,7 +394,8 @@ class MainActivity : ComponentActivity() {
                                 val result = imageLoader.execute(
                                     ImageRequest.Builder(this@MainActivity)
                                         .data(song.thumbnailUrl)
-                                        .allowHardware(false)
+                                        .size(100, 100)
+                                        .allowHardware(true)
                                         .memoryCachePolicy(CachePolicy.ENABLED)
                                         .diskCachePolicy(CachePolicy.ENABLED)
                                         .networkCachePolicy(CachePolicy.ENABLED)

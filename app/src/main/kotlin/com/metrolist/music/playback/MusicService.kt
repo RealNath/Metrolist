@@ -231,6 +231,8 @@ class MusicService :
     private var discordUpdateJob: kotlinx.coroutines.Job? = null
 
     private var scrobbleManager: ScrobbleManager? = null
+    
+    private var saveQueueJob: kotlinx.coroutines.Job? = null
 
     val automixItems = MutableStateFlow<List<MediaItem>>(emptyList())
 
@@ -504,25 +506,8 @@ class MusicService :
             }
         }
 
-        // Save queue periodically to prevent queue loss from crash or force kill
-        scope.launch {
-            while (isActive) {
-                delay(30.seconds)
-                if (dataStore.get(PersistentQueueKey, true)) {
-                    saveQueueToDisk()
-                }
-            }
-        }
-
-        // Save queue more frequently when playing to ensure state is preserved
-        scope.launch {
-            while (isActive) {
-                delay(10.seconds)
-                if (dataStore.get(PersistentQueueKey, true) && player.isPlaying) {
-                    saveQueueToDisk()
-                }
-            }
-        }
+        // Queue saving is now handled only on important events (media transitions, state changes)
+        // to avoid continuous I/O operations that cause lag
     }
 
     private fun setupAudioFocusRequest() {
@@ -1148,18 +1133,18 @@ class MusicService :
             }
         }
 
-        // Save state when media item changes
+        // Save state when media item changes (debounced)
         if (dataStore.get(PersistentQueueKey, true)) {
-            saveQueueToDisk()
+            saveQueueToDiskDebounced()
         }
     }
 
     override fun onPlaybackStateChanged(
         @Player.State playbackState: Int,
     ) {
-        // Save state when playback state changes
+        // Save state when playback state changes (debounced)
         if (dataStore.get(PersistentQueueKey, true)) {
-            saveQueueToDisk()
+            saveQueueToDiskDebounced()
         }
 
         if (playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED) {
@@ -1197,19 +1182,20 @@ class MusicService :
             currentMediaMetadata.value = player.currentMetadata
         }
 
-        // Discord RPC updates
-
-        // Update the Discord RPC activity if the player is playing
+        // Discord RPC updates (only when playing to reduce overhead)
         if (events.containsAny(Player.EVENT_IS_PLAYING_CHANGED)) {
-            if (player.isPlaying) {
+            if (player.isPlaying && player.playbackState == Player.STATE_READY) {
                 currentSong.value?.let { song ->
-                    scope.launch {
+                    discordUpdateJob?.cancel()
+                    discordUpdateJob = scope.launch {
+                        delay(1000) // Debounce to avoid rapid updates
                         discordRpc?.updateSong(song, player.currentPosition, player.playbackParameters.speed, dataStore.get(DiscordUseDetailsKey, false))
                     }
                 }
             }
             // Send empty activity to the Discord RPC if the player is not playing
             else if (!events.containsAny(Player.EVENT_POSITION_DISCONTINUITY, Player.EVENT_MEDIA_ITEM_TRANSITION)){
+                discordUpdateJob?.cancel()
                 scope.launch {
                     discordRpc?.stopActivity()
                 }
@@ -1238,9 +1224,9 @@ class MusicService :
             player.setShuffleOrder(DefaultShuffleOrder(shuffledIndices, System.currentTimeMillis()))
         }
 
-        // Save state when shuffle mode changes
+        // Save state when shuffle mode changes (debounced)
         if (dataStore.get(PersistentQueueKey, true)) {
-            saveQueueToDisk()
+            saveQueueToDiskDebounced()
         }
     }
 
@@ -1252,9 +1238,9 @@ class MusicService :
             }
         }
 
-        // Save state when repeat mode changes
+        // Save state when repeat mode changes (debounced)
         if (dataStore.get(PersistentQueueKey, true)) {
-            saveQueueToDisk()
+            saveQueueToDiskDebounced()
         }
     }
 
@@ -1475,6 +1461,14 @@ class MusicService :
         }
     }
 
+    private fun saveQueueToDiskDebounced() {
+        saveQueueJob?.cancel()
+        saveQueueJob = scope.launch {
+            delay(2000) // Debounce 2 seconds to avoid excessive I/O
+            saveQueueToDisk()
+        }
+    }
+    
     private fun saveQueueToDisk() {
         if (player.mediaItemCount == 0) {
             return
