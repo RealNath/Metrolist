@@ -1113,57 +1113,57 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxSize()
                                 .nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
                         ) {
-                            Row(Modifier.fillMaxSize()) {
-                                AnimatedVisibility(
-                                    visible = showRail,
-                                    enter = fadeIn() + expandHorizontally(),
-                                    exit = fadeOut() + shrinkHorizontally()
-                                ) {
+                            key(showRail) {
+                                Row(Modifier.fillMaxSize()) {
+                                    if (showRail) {
                                         NavigationRail(
-                                        containerColor = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer
-                                    ) {
-                                        Spacer(modifier = Modifier.weight(1f))
+                                            containerColor = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer
+                                        ) {
+                                            Spacer(modifier = Modifier.weight(1f))
 
-                                        navigationItems.fastForEach { screen ->
-                                            val isSelected = remember(navBackStackEntry, screen.route) {
-                                                navBackStackEntry?.destination?.hierarchy?.any { it.route == screen.route } == true
-                                            }
-                                            NavigationRailItem(
-                                                selected = isSelected,
-                                                onClick = {
-                                                    if (screen.route == Screens.Search.route) {
-                                                        onActiveChange(true)
-                                                    } else if (isSelected) {
-                                                        navController.currentBackStackEntry?.savedStateHandle?.set("scrollToTop", true)
-                                                        coroutineScope.launch {
-                                                            searchBarScrollBehavior.state.resetHeightOffset()
-                                                        }
-                                                    } else {
-                                                        navController.navigate(screen.route) {
-                                                            popUpTo(navController.graph.startDestinationId) {
-                                                                inclusive = false
+                                            navigationItems.fastForEach { screen ->
+                                                val isSelected = remember(navBackStackEntry, screen.route) {
+                                                    navBackStackEntry?.destination?.hierarchy?.any { it.route == screen.route } == true
+                                                }
+                                                NavigationRailItem(
+                                                    selected = isSelected,
+                                                    onClick = {
+                                                        if (screen.route == Screens.Search.route) {
+                                                            onActiveChange(true)
+                                                        } else if (isSelected) {
+                                                            navController.currentBackStackEntry?.savedStateHandle?.set("scrollToTop", true)
+                                                            coroutineScope.launch {
+                                                                searchBarScrollBehavior.state.resetHeightOffset()
                                                             }
-                                                            launchSingleTop = true
-                                                            restoreState = false
+                                                        } else {
+                                                            navController.navigate(screen.route) {
+                                                                popUpTo(navController.graph.startDestinationId) {
+                                                                    inclusive = false
+                                                                }
+                                                                launchSingleTop = true
+                                                                restoreState = false
+                                                            }
                                                         }
-                                                    }
-                                                },
-                                                icon = {
-                                                    Icon(
-                                                        painter = painterResource(
-                                                            id = if (isSelected) screen.iconIdActive else screen.iconIdInactive
-                                                        ),
-                                                        contentDescription = null,
-                                                    )
-                                                },
-                                            )
-                                        }
+                                                    },
+                                                    icon = {
+                                                        Icon(
+                                                            painter = painterResource(
+                                                                id = if (isSelected) screen.iconIdActive else screen.iconIdInactive
+                                                            ),
+                                                            contentDescription = null,
+                                                        )
+                                                    },
+                                                )
+                                            }
 
-                                        Spacer(modifier = Modifier.weight(1f))
+                                            Spacer(modifier = Modifier.weight(1f))
+                                        }
                                     }
-                                }
-                                
-                                Box(if (showRail) Modifier.weight(1f) else Modifier.fillMaxWidth()) {
+
+                                    val boxModifier = remember(showRail) {
+                                        if (showRail) Modifier.weight(1f) else Modifier.fillMaxWidth()
+                                    }
+                                    Box(boxModifier) {
                                     // NavHost with animations
                                     NavHost(
                                         navController = navController,
@@ -1245,6 +1245,7 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
                                 }
+                            }
                             }
                         }
 
