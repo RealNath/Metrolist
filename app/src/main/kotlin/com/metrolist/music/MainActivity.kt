@@ -74,6 +74,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -524,10 +525,11 @@ class MainActivity : ComponentActivity() {
                                 !active
                     }
 
-                    val isLandscape = remember(configuration) {
-                        configuration.screenWidthDp > configuration.screenHeightDp
+                    val showRail by remember {
+                        derivedStateOf {
+                            configuration.screenWidthDp > configuration.screenHeightDp && !inSearchScreen
+                        }
                     }
-                    val showRail = isLandscape && !inSearchScreen
 
                     val getNavPadding: () -> Dp = remember {
                         {
@@ -558,8 +560,7 @@ class MainActivity : ComponentActivity() {
                     val playerAwareWindowInsets = remember(
                         bottomInset,
                         shouldShowNavigationBar,
-                        playerBottomSheetState.isDismissed,
-                        showRail,
+                        playerBottomSheetState.isDismissed
                     ) {
                         var bottom = bottomInset
                         if (shouldShowNavigationBar && !showRail) {
@@ -1104,8 +1105,9 @@ class MainActivity : ComponentActivity() {
                                         Spacer(modifier = Modifier.weight(1f))
 
                                         navigationItems.fastForEach { screen ->
-                                            val isSelected =
+                                            val isSelected = remember(navBackStackEntry, screen.route) {
                                                 navBackStackEntry?.destination?.hierarchy?.any { it.route == screen.route } == true
+                                            }
                                             NavigationRailItem(
                                                 selected = isSelected,
                                                 onClick = {
