@@ -541,35 +541,42 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    val navigationBarHeight by animateDpAsState(
-                        targetValue = if (shouldShowNavigationBar && !showRail) NavigationBarHeight else 0.dp,
-                        animationSpec = NavigationBarAnimationSpec,
-                        label = "",
-                    )
+                    val navigationBarHeight = remember(shouldShowNavigationBar) {
+                        if (shouldShowNavigationBar) NavigationBarHeight else 0.dp
+                    }
+
+                    val collapsedBound = remember(
+                        bottomInset,
+                        navigationBarHeight,
+                        slimNav,
+                        useNewMiniPlayerDesign
+                    ) {
+                        bottomInset +
+                            (if (shouldShowNavigationBar) {
+                                if (slimNav) SlimNavBarHeight else NavigationBarHeight
+                            } else 0.dp) +
+                            (if (useNewMiniPlayerDesign) MiniPlayerBottomSpacing else 0.dp) +
+                            MiniPlayerHeight
+                    }
 
                     val playerBottomSheetState =
                         rememberBottomSheetState(
                             dismissedBound = 0.dp,
-                            collapsedBound = bottomInset +
-                                (if (!showRail && shouldShowNavigationBar) getNavPadding() else 0.dp) +
-                                (if (useNewMiniPlayerDesign) MiniPlayerBottomSpacing else 0.dp) +
-                                MiniPlayerHeight,
+                            collapsedBound = collapsedBound,
                             expandedBound = maxHeight,
                         )
 
-                    val playerAwareWindowInsets = remember(
-                        bottomInset,
-                        shouldShowNavigationBar,
-                        playerBottomSheetState.isDismissed
-                    ) {
-                        var bottom = bottomInset
-                        if (shouldShowNavigationBar && !showRail) {
-                            bottom += NavigationBarHeight
+                    val playerAwareWindowInsets by remember {
+                        derivedStateOf {
+                            var bottom = bottomInset
+                            if (shouldShowNavigationBar && !showRail) {
+                                bottom += NavigationBarHeight
+                            }
+                            if (!playerBottomSheetState.isDismissed) bottom += MiniPlayerHeight
+                            windowsInsets
+                                .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+                                .add(WindowInsets(top = AppBarHeight, bottom = bottom))
                         }
-                        if (!playerBottomSheetState.isDismissed) bottom += MiniPlayerHeight
-                        windowsInsets
-                            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
-                            .add(WindowInsets(top = AppBarHeight, bottom = bottom))
                     }
 
                     appBarScrollBehavior(
@@ -917,10 +924,12 @@ class MainActivity : ComponentActivity() {
                                         modifier = Modifier
                                             .align(Alignment.TopCenter)
                                             .windowInsetsPadding(
-                                                if (showRail) {
-                                                    WindowInsets(left = NavigationBarHeight)
-                                                } else {
-                                                    WindowInsets(0.dp)
+                                                remember(showRail) {
+                                                    if (showRail) {
+                                                        WindowInsets(left = NavigationBarHeight)
+                                                    } else {
+                                                        WindowInsets(0.dp)
+                                                    }
                                                 }
                                             ),
                                         colors = if (pureBlack && active) {
@@ -987,46 +996,53 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 }
+                                }
                             },
                             bottomBar = {
-                                if (!showRail) {
-                                    Box {
+                                key(showRail) {
+                                    if (!showRail) {
+                                        Box {
                                         BottomSheetPlayer(
                                             state = playerBottomSheetState,
                                             navController = navController,
                                             pureBlack = pureBlack
                                         )
+                                        val navigationBarOffset by remember {
+                                            derivedStateOf {
+                                                if (navigationBarHeight == 0.dp) {
+                                                    IntOffset(
+                                                        x = 0,
+                                                        y = (bottomInset + NavigationBarHeight).roundToPx(),
+                                                    )
+                                                } else {
+                                                    val slideOffset =
+                                                        (bottomInset + NavigationBarHeight) *
+                                                                playerBottomSheetState.progress.coerceIn(
+                                                                    0f,
+                                                                    1f,
+                                                                )
+                                                    val hideOffset =
+                                                        (bottomInset + NavigationBarHeight) * (1 - navigationBarHeight / NavigationBarHeight)
+                                                    IntOffset(
+                                                        x = 0,
+                                                        y = (slideOffset + hideOffset).roundToPx(),
+                                                    )
+                                                }
+                                            }
+                                        }
+
                                         NavigationBar(
                                             modifier = Modifier
                                                 .align(Alignment.BottomCenter)
                                                 .height(bottomInset + getNavPadding())
-                                                .offset {
-                                                    if (navigationBarHeight == 0.dp) {
-                                                        IntOffset(
-                                                            x = 0,
-                                                            y = (bottomInset + NavigationBarHeight).roundToPx(),
-                                                        )
-                                                    } else {
-                                                        val slideOffset =
-                                                            (bottomInset + NavigationBarHeight) *
-                                                                    playerBottomSheetState.progress.coerceIn(
-                                                                        0f,
-                                                                        1f,
-                                                                    )
-                                                        val hideOffset =
-                                                            (bottomInset + NavigationBarHeight) * (1 - navigationBarHeight / NavigationBarHeight)
-                                                        IntOffset(
-                                                            x = 0,
-                                                            y = (slideOffset + hideOffset).roundToPx(),
-                                                        )
-                                                    }
-                                                },
+                                                .offset { navigationBarOffset },
                                             containerColor = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
                                             contentColor = if (pureBlack) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                                         ) {
                                             navigationItems.fastForEach { screen ->
-                                                val isSelected =
+                                                val isSelected = remember(navBackStackEntry, screen.route) {
                                                     navBackStackEntry?.destination?.hierarchy?.any { it.route == screen.route } == true
+                                                }
 
                                                 NavigationBarItem(
                                                     selected = isSelected,
@@ -1098,8 +1114,12 @@ class MainActivity : ComponentActivity() {
                                 .nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
                         ) {
                             Row(Modifier.fillMaxSize()) {
-                                if (showRail) {
-                                    NavigationRail(
+                                AnimatedVisibility(
+                                    visible = showRail,
+                                    enter = fadeIn() + expandHorizontally(),
+                                    exit = fadeOut() + shrinkHorizontally()
+                                ) {
+                                        NavigationRail(
                                         containerColor = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer
                                     ) {
                                         Spacer(modifier = Modifier.weight(1f))
@@ -1142,7 +1162,8 @@ class MainActivity : ComponentActivity() {
                                         Spacer(modifier = Modifier.weight(1f))
                                     }
                                 }
-                                Box(Modifier.weight(1f)) {
+                                
+                                Box(if (showRail) Modifier.weight(1f) else Modifier.fillMaxWidth()) {
                                     // NavHost with animations
                                     NavHost(
                                         navController = navController,
