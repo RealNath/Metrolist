@@ -429,13 +429,13 @@ class MainActivity : ComponentActivity() {
                             if (pureBlack) Color.Black else MaterialTheme.colorScheme.surface
                         )
                 ) {
-                    val context = LocalContext.current
                     val focusManager = LocalFocusManager.current
                     val density = LocalDensity.current
                     
+                    val landscapeMode = this@MainActivity.landscapeMode()
                     val useRail by remember {
                         derivedStateOf {
-                            context.landscapeMode()
+                            landscapeMode
                         }
                     }
                     
@@ -527,23 +527,21 @@ class MainActivity : ComponentActivity() {
                                 inSearchScreen
                     }
 
-                    val shouldShowNavigationBar = remember(navBackStackEntry, active, useRail) {
-                        !useRail && (navBackStackEntry?.destination?.route == null ||
+                    val shouldShowNavigationBar = remember(navBackStackEntry, active, landscapeMode) {
+                        !landscapeMode && (navBackStackEntry?.destination?.route == null ||
                                 navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route }) &&
                                 !active
                     }
 
-                    val shouldShowNavigationRail = remember(useRail, inSearchScreen, active) {
-                        useRail && !inSearchScreen && !active
+                    val shouldShowNavigationRail = remember(landscapeMode, inSearchScreen, active) {
+                        landscapeMode && !inSearchScreen && !active
                     }
 
-                    val getNavPadding: () -> Dp = remember(shouldShowNavigationBar, slimNav) {
-                        {
-                            if (shouldShowNavigationBar) {
-                                if (slimNav) SlimNavBarHeight else NavigationBarHeight
-                            } else {
-                                0.dp
-                            }
+                    fun getNavPadding(): Dp {
+                        return if (shouldShowNavigationBar) {
+                            if (slimNav) SlimNavBarHeight else NavigationBarHeight
+                        } else {
+                            0.dp
                         }
                     }
 
