@@ -30,3 +30,13 @@ fun Context.isInternetConnected(): Boolean {
     val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
     return networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ?: false
 }
+
+fun Context.landscapeMode(): Boolean {
+    val config = resources.configuration
+    val isTablet = config.smallestScreenWidthDp >= 600
+    val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val forceTabMode = runBlocking {
+        dataStore.get(TabletUiKey, isTablet)
+    }
+    return (isTablet || forceTabMode) && isLandscape
+}
